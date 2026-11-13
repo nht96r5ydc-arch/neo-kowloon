@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<title>NEO-KOWLOON</title>
+<title>NEO-KOWLOON : Overdrive</title>
 <style>
-:root{--bg:#06080e;--panel:#101524;--cyan:#00f3ff;--pink:#ff0055;--yellow:#fcee0a;--purple:#9d00ff}
-*{box-sizing:border-box;margin:0;padding:0;user-select:none;font-family:sans-serif}
+:root{--bg:#06080e;--panel:#101524;--cyan:#00f3ff;--pink:#ff0055;--yellow:#fcee0a;--purple:#9d00ff;--green:#00ff88}
+*{box-sizing:border-box;margin:0;padding:0;user-select:none;font-family:system-ui,sans-serif}
 body{background:var(--bg);color:#e2e8f0;display:flex;flex-direction:column;align-items:center;height:100dvh;overflow:hidden}
 #top-bar{width:100%;max-width:500px;background:#0b0f1a;padding:10px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--cyan)}
 .badge{background:#161d30;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:bold;border:1px solid #2a3655;margin-left:4px}
 #main{width:100%;max-width:500px;flex-grow:1;overflow-y:auto;padding:12px}
 #nav{width:100%;max-width:500px;display:flex;background:#0b0f1a;border-top:1px solid #2a3655}
-.nbtn{flex:1;padding:12px 2px;background:none;border:none;color:#64748b;font-size:11px;font-weight:bold;cursor:pointer}
+.nbtn{flex:1;padding:12px 2px;background:none;border:none;color:#64748b;font-size:11px;font-weight:bold;cursor:pointer;text-transform:uppercase}
 .nbtn.active{color:var(--cyan);background:rgba(0,243,255,.1);border-top:2px solid var(--cyan)}
 .sec{display:none}.sec.active{display:block}
 h2{font-size:14px;color:var(--cyan);margin-bottom:10px;border-left:3px solid var(--pink);padding-left:8px;text-transform:uppercase}
@@ -37,7 +37,8 @@ h2{font-size:14px;color:var(--cyan);margin-bottom:10px;border-left:3px solid var
 .hpfill{height:100%;background:var(--cyan);transition:width .2s}.hpfill.en{background:var(--pink)}
 #log{background:#04060a;border:1px solid #1e293b;border-radius:6px;height:85px;overflow-y:auto;padding:8px;font-size:11px;font-family:monospace;margin-bottom:10px}
 .ctrls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-#btn-fat{grid-column:span 2;background:linear-gradient(90deg,#ff0055,#ff5500);color:#fff;font-size:13px;padding:12px;border:2px solid var(--yellow);display:none}
+#btn-fat{grid-column:span 2;background:linear-gradient(90deg,#ff0055,#ff5500);color:#fff;font-size:13px;padding:12px;border:2px solid var(--yellow);display:none;animation:pulse .7s infinite alternate}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.03)}}
 #fat-ov{position:fixed;inset:0;background:#000;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
 #modal{position:fixed;inset:0;background:rgba(5,8,17,.96);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;z-index:20;text-align:center}
 .ad{width:300px;height:250px;background:#161d30;border:1px dashed #64748b;display:flex;align-items:center;justify-content:center;margin:12px 0;font-size:12px;color:#94a3b8}
@@ -57,69 +58,71 @@ h2{font-size:14px;color:var(--cyan);margin-bottom:10px;border-left:3px solid var
 <div id="fat-ov"><h1 id="f-tit" style="color:var(--yellow);font-size:26px;margin-bottom:10px">EXÉCUTION</h1><p id="f-dsc" style="color:var(--cyan);font-weight:bold"></p></div>
 <div id="modal"><h2 id="m-tit" style="border:none;font-size:20px">VICTOIRE !</h2><p id="m-rew" style="color:var(--yellow);margin:5px 0"></p><p id="m-bos" style="color:var(--pink);font-size:12px;font-weight:bold"></p><div class="ad" id="iad">Pub (300x250)</div><button class="btn c-cyan" style="max-width:240px" onclick="nextStg()">Continuer</button></div>
 <script>
-const B_DEF=[
+const B_DEF=Array.of(
 {id:'hq',n:'1. QG Tactique',d:'Débloque héros.',c:120},{id:'forge',n:'2. Forge Plasma',d:'+12% ATQ/niv.',c:150},
 {id:'clinic',n:'3. Cyber-Clinique',d:'+15% PV/niv.',c:150},{id:'market',n:'4. Marché Noir',d:'+60 ⚡ passif.',c:100},
 {id:'reactor',n:'5. Réacteur',d:'+10% ⚡ combat.',c:180},{id:'radar',n:'6. Tour Radar',d:'+2% Critique.',c:200},
 {id:'genlab',n:'7. Labo Génétique',d:'Débloque mutants.',c:220},{id:'arena',n:'8. Arène',d:'+15% gain Finish.',c:240},
 {id:'drones',n:'9. Usine Drones',d:'Débloque robots.',c:260},{id:'bank',n:'10. Banque',d:'+100 ⚡ passif.',c:300},
 {id:'temple',n:'11. Temple Néon',d:'Débloque ninjas.',c:350},{id:'orbital',n:'12. Bastion',d:'+20% stats Boss.',c:500}
-];
-const H_DAT=[
-{id:'h1',n:'Kael',ic:'🥷',b:'hq',l:1,hp:130,atk:25,sk:'Surcharge x2.2',tp:'b',ft:'PIRATAGE CÉRÉBRAL',fd:'Kael grille les circuits ennemis dans une gerbe d\'étincelles !'},
-{id:'h2',n:'Valkyrie',ic:'🦾',b:'hq',l:2,hp:180,atk:32,sk:'Frappe+Bouclier',tp:'s',ft:'JUGEMENT CÉLESTE',fd:'Un rayon laser orbital désintègre la cible au ralenti !'},
-{id:'h3',n:'Dr. Nova',ic:'🧬',b:'clinic',l:2,hp:165,atk:29,sk:'Nano-Soin 45%',tp:'h',ft:'VIRUS NÉCROTIQUE',fd:'Des nanorobots dissolvent l\'armure ennemie !'},
-{id:'h4',n:'Jax Pyro',ic:'🔥',b:'forge',l:2,hp:190,atk:38,sk:'Lance-Flammes',tp:'b',ft:'SUPERNOVA',fd:'Explosion solaire qui calcine toute l\'arène !'},
-{id:'h5',n:'Echo Sniper',ic:'🎯',b:'radar',l:2,hp:160,atk:44,sk:'Tir Perforant',tp:'b',ft:'BALLE FANTÔME',fd:'Le projectile pulvérise le cœur du robot au ralenti !'},
-{id:'h6',n:'Tank-09',ic:'🛡️',b:'clinic',l:3,hp:280,atk:34,sk:'Forteresse',tp:'s',ft:'ÉCRASEMENT TITAN',fd:'Coup de marteau sismique dévastateur !'},
-{id:'h7',n:'Viper',ic:'🐍',b:'genlab',l:2,hp:210,atk:46,sk:'Venin + Drain',tp:'h',ft:'MORSURE ACIDE',fd:'Tranche la cible en mille éclats néon !'},
-{id:'h8',n:'Spark',ic:'🤖',b:'drones',l:2,hp:220,atk:48,sk:'Essaim Drones',tp:'b',ft:'APOCALYPSE DRONES',fd:'50 drones kamikazes explosent sur la cible !'},
-{id:'h9',n:'Zero Ninja',ic:'⚔️',b:'temple',l:2,hp:240,atk:58,sk:'Katana Plasma',tp:'b',ft:'COUPE DIMENSIONNELLE',fd:'Découpe l\'ennemi d\'un seul coup de katana !'},
-{id:'h10',n:'Aegis',ic:'⚡',b:'hq',l:4,hp:320,atk:52,sk:'Onde Divine',tp:'s',ft:'COLÈRE DE ZEUS',fd:'Un éclair foudroie et vaporise l\'adversaire !'},
-{id:'h11',n:'Nyx Ombre',ic:'🦇',b:'market',l:4,hp:260,atk:65,sk:'Assassinat',tp:'b',ft:'EXÉCUTION OMBRE',fd:'Transperce le noyau énergétique de la cible !'},
+);
+const H_DAT=Array.of(
+{id:'h1',n:'Kael',ic:'🥷',b:'hq',l:1,hp:130,atk:25,sk:'Surcharge x2.2',tp:'b',ft:'PIRATAGE CÉRÉBRAL',fd:'Kael grille les circuits ennemis !'},
+{id:'h2',n:'Valkyrie',ic:'🦾',b:'hq',l:2,hp:180,atk:32,sk:'Frappe+Bouclier',tp:'s',ft:'JUGEMENT CÉLESTE',fd:'Rayon laser orbital au ralenti !'},
+{id:'h3',n:'Dr. Nova',ic:'🧬',b:'clinic',l:2,hp:165,atk:29,sk:'Nano-Soin 45%',tp:'h',ft:'VIRUS NÉCROTIQUE',fd:'Nanorobots dissolvant l\'armure !'},
+{id:'h4',n:'Jax Pyro',ic:'🔥',b:'forge',l:2,hp:190,atk:38,sk:'Lance-Flammes',tp:'b',ft:'SUPERNOVA',fd:'Explosion solaire calcinant l\'arène !'},
+{id:'h5',n:'Echo Sniper',ic:'🎯',b:'radar',l:2,hp:160,atk:44,sk:'Tir Perforant',tp:'b',ft:'BALLE FANTÔME',fd:'Pulvérise le cœur du robot !'},
+{id:'h6',n:'Tank-09',ic:'🛡️',b:'clinic',l:3,hp:280,atk:34,sk:'Forteresse',tp:'s',ft:'ÉCRASEMENT TITAN',fd:'Coup de marteau sismique !'},
+{id:'h7',n:'Viper',ic:'🐍',b:'genlab',l:2,hp:210,atk:46,sk:'Venin + Drain',tp:'h',ft:'MORSURE ACIDE',fd:'Tranche la cible en éclats néon !'},
+{id:'h8',n:'Spark',ic:'🤖',b:'drones',l:2,hp:220,atk:48,sk:'Essaim Drones',tp:'b',ft:'APOCALYPSE DRONES',fd:'50 drones kamikazes explosent !'},
+{id:'h9',n:'Zero Ninja',ic:'⚔️',b:'temple',l:2,hp:240,atk:58,sk:'Katana Plasma',tp:'b',ft:'COUPE DIMENSIONNELLE',fd:'Découpe l\'ennemi d\'un coup de katana !'},
+{id:'h10',n:'Aegis',ic:'⚡',b:'hq',l:4,hp:320,atk:52,sk:'Onde Divine',tp:'s',ft:'COLÈRE DE ZEUS',fd:'Un éclair vaporise l\'adversaire !'},
+{id:'h11',n:'Nyx Ombre',ic:'🦇',b:'market',l:4,hp:260,atk:65,sk:'Assassinat',tp:'b',ft:'EXÉCUTION OMBRE',fd:'Transperce le noyau énergétique !'},
 {id:'h12',n:'Atlas Méca',ic:'🚀',b:'drones',l:4,hp:380,atk:68,sk:'24 Missiles',tp:'b',ft:'PLUIE D\'ACIER',fd:'24 missiles réduisent la cible en poussière !'},
 {id:'h13',n:'Sera Chrono',ic:'⏳',b:'genlab',l:4,hp:290,atk:72,sk:'Distorsion',tp:'h',ft:'PARADOXE TEMPOREL',fd:'Fige le temps et frappe 100 fois !'},
-{id:'h14',n:'Kratos-X',ic:'🪓',b:'arena',l:4,hp:410,atk:82,sk:'Rage Cyber',tp:'b',ft:'FURIE SANGLANTE',fd:'Uppercut supersonique dévastateur !'},
-{id:'h15',n:'Kenji Ronin',ic:'👺',b:'temple',l:4,hp:360,atk:95,sk:'Dragon Néon',tp:'b',ft:'SOUFFLE DU DRAGON',fd:'Un dragon d\'énergie engloutit l\'ennemi !'},
-{id:'h16',n:'Prime Élu',ic:'👑',b:'orbital',l:3,hp:500,atk:115,sk:'Singularité',tp:'b',ft:'BIG BANG',fd:'Un trou noir miniature désintègre la cible !'}
-];
-const BO_DAT=[
-{id:'b1',n:'BOSS 1: Cerbère',ic:'🐕',st:3,co:20,hp:300,atk:55,sk:'Morsure Feu',tp:'b',ft:'DÉCHIREMENT',fd:'Broie l\'ennemi entre ses mâchoires en fusion !'},
-{id:'b2',n:'BOSS 2: Titan-X',ic:'🤖',st:6,co:30,hp:380,atk:68,sk:'Canon Nucléaire',tp:'b',ft:'RAYON ATOMIQUE',fd:'Faisceau traversant tout le secteur !'},
-{id:'b3',n:'BOSS 3: Méduse',ic:'👾',st:9,co:40,hp:440,atk:78,sk:'Drainage Vital',tp:'h',ft:'TEMPÊTE ÉLECTRIQUE',fd:'Électrocute la cible jusqu\'à l\'explosion !'},
-{id:'b4',n:'BOSS 4: Goliath',ic:'🦾',st:12,co:50,hp:550,atk:85,sk:'Bouclier Acier',tp:'s',ft:'CHARGE DE BÉLIER',fd:'Impact à Mach 2 hors de l\'arène !'},
-{id:'b5',n:'BOSS 5: Arachno',ic:'🕷️',st:15,co:60,hp:520,atk:98,sk:'Toile Laser',tp:'b',ft:'PIÈGE MORTEL',fd:'Lasers coupants haute tension !'},
-{id:'b6',n:'BOSS 6: Valkyrie N',ic:'🦅',st:18,co:70,hp:600,atk:110,sk:'Plongeon Fatal',tp:'b',ft:'CHUTE MÉTÉORE',fd:'Impact créant un cratère géant !'},
-{id:'b7',n:'BOSS 7: Kraken',ic:'🐙',st:21,co:80,hp:720,atk:118,sk:'Soin Abyssal',tp:'h',ft:'BROYAGE ABYSSAL',fd:'Pression hydraulique titanesque !'},
-{id:'b8',n:'BOSS 8: Oni',ic:'👹',st:24,co:90,hp:680,atk:135,sk:'Lame Maudite',tp:'b',ft:'JUGEMENT D\'ONI',fd:'Sabre enflammé fendant l\'espace !'},
+{id:'h14',n:'Kratos-X',ic:'🪓',b:'arena',l:4,hp:410,atk:82,sk:'Rage Cyber',tp:'b',ft:'FURIE SANGLANTE',fd:'Uppercut supersonique !'},
+{id:'h15',n:'Kenji Ronin',ic:'👺',b:'temple',l:4,hp:360,atk:95,sk:'Dragon Néon',tp:'b',ft:'SOUFFLE DU DRAGON',fd:'Dragon d\'énergie engloutissant l\'ennemi !'},
+{id:'h16',n:'Prime Élu',ic:'👑',b:'orbital',l:3,hp:500,atk:115,sk:'Singularité',tp:'b',ft:'BIG BANG',fd:'Trou noir miniature désintégrant la cible !'}
+);
+const BO_DAT=Array.of(
+{id:'b1',n:'BOSS 1: Cerbère',ic:'🐕',st:3,co:20,hp:300,atk:55,sk:'Morsure Feu',tp:'b',ft:'DÉCHIREMENT',fd:'Broie l\'ennemi !'},
+{id:'b2',n:'BOSS 2: Titan-X',ic:'🤖',st:6,co:30,hp:380,atk:68,sk:'Canon Nucléaire',tp:'b',ft:'RAYON ATOMIQUE',fd:'Faisceau atomique !'},
+{id:'b3',n:'BOSS 3: Méduse',ic:'👾',st:9,co:40,hp:440,atk:78,sk:'Drainage Vital',tp:'h',ft:'TEMPÊTE ÉLECTRIQUE',fd:'Électrocute la cible !'},
+{id:'b4',n:'BOSS 4: Goliath',ic:'🦾',st:12,co:50,hp:550,atk:85,sk:'Bouclier Acier',tp:'s',ft:'CHARGE DE BÉLIER',fd:'Impact à Mach 2 !'},
+{id:'b5',n:'BOSS 5: Arachno',ic:'🕷️',st:15,co:60,hp:520,atk:98,sk:'Toile Laser',tp:'b',ft:'PIÈGE MORTEL',fd:'Lasers coupants !'},
+{id:'b6',n:'BOSS 6: Valkyrie N',ic:'🦅',st:18,co:70,hp:600,atk:110,sk:'Plongeon Fatal',tp:'b',ft:'CHUTE MÉTÉORE',fd:'Cratère géant !'},
+{id:'b7',n:'BOSS 7: Kraken',ic:'🐙',st:21,co:80,hp:720,atk:118,sk:'Soin Abyssal',tp:'h',ft:'BROYAGE ABYSSAL',fd:'Pression hydraulique !'},
+{id:'b8',n:'BOSS 8: Oni',ic:'👹',st:24,co:90,hp:680,atk:135,sk:'Lame Maudite',tp:'b',ft:'JUGEMENT D\'ONI',fd:'Sabre enflammé !'},
 {id:'b9',n:'BOSS 9: Hydra',ic:'🐉',st:27,co:100,hp:800,atk:145,sk:'Triple Plasma',tp:'b',ft:'TRINITÉ INFERNALE',fd:'Trois rayons fusionnés !'},
-{id:'b10',n:'BOSS 10: Spectre',ic:'👻',st:30,co:115,hp:780,atk:160,sk:'Phase Mortelle',tp:'b',ft:'EFFACEMENT',fd:'Suppression totale de la cible !'},
-{id:'b11',n:'BOSS 11: Léviathan',ic:'🦈',st:33,co:130,hp:950,atk:170,sk:'Armure Réactive',tp:'s',ft:'RAZ-DE-MARÉE',fd:'Broie l\'adversaire sans trace !'},
-{id:'b12',n:'BOSS 12: Némésis',ic:'☣️',st:36,co:145,hp:920,atk:190,sk:'Toxine',tp:'h',ft:'CONTAMINATION',fd:'Onde bio-plasma désintégrante !'},
-{id:'b13',n:'BOSS 13: Chronos',ic:'⚙️',st:39,co:160,hp:1050,atk:210,sk:'Arrêt Temps',tp:'b',ft:'FIN DES TEMPS',fd:'Réduit le métal en poussière !'},
-{id:'b14',n:'BOSS 14: Shogun',ic:'🏯',st:42,co:180,hp:1150,atk:235,sk:'Armée Fantôme',tp:'b',ft:'CHARGE IMPÉRIALE',fd:'Mille guerriers holographiques !'},
-{id:'b15',n:'BOSS 15: Archonte',ic:'☀️',st:45,co:200,hp:1300,atk:260,sk:'Éruption',tp:'s',ft:'CŒUR D\'ÉTOILE',fd:'Puissance d\'un soleil miniature !'},
-{id:'b16',n:'BOSS 16: DIEU ROBOT',ic:'👁️',st:48,co:250,hp:1600,atk:320,sk:'Apocalypse',tp:'b',ft:'GENÈSE FINALE',fd:'Réécrit la réalité et efface l\'ennemi !'}
-];
-let df={};B_DEF.forEach(x=>df[x.id]=1);
-let S=JSON.parse(localStorage.getItem('nkSave'))||{cr:300,cy:10,na:false,st:1,sel:'h1',b:df,ob:[],db:[]};
+{id:'b10',n:'BOSS 10: Spectre',ic:'👻',st:30,co:115,hp:780,atk:160,sk:'Phase Mortelle',tp:'b',ft:'EFFACEMENT',fd:'Suppression totale !'},
+{id:'b11',n:'BOSS 11: Léviathan',ic:'🦈',st:33,co:130,hp:950,atk:170,sk:'Armure Réactive',tp:'s',ft:'RAZ-DE-MARÉE',fd:'Broie l\'adversaire !'},
+{id:'b12',n:'BOSS 12: Némésis',ic:'☣️',st:36,co:145,hp:920,atk:190,sk:'Toxine',tp:'h',ft:'CONTAMINATION',fd:'Onde bio-plasma !'},
+{id:'b13',n:'BOSS 13: Chronos',ic:'⚙️',st:39,co:160,hp:1050,atk:210,sk:'Arrêt Temps',tp:'b',ft:'FIN DES TEMPS',fd:'Réduit en poussière !'},
+{id:'b14',n:'BOSS 14: Shogun',ic:'🏯',st:42,co:180,hp:1150,atk:235,sk:'Armée Fantôme',tp:'b',ft:'CHARGE IMPÉRIALE',fd:'Mille guerriers !'},
+{id:'b15',n:'BOSS 15: Archonte',ic:'☀️',st:45,co:200,hp:1300,atk:260,sk:'Éruption',tp:'s',ft:'CŒUR D\'ÉTOILE',fd:'Soleil miniature !'},
+{id:'b16',n:'BOSS 16: DIEU ROBOT',ic:'👁️',st:48,co:250,hp:1600,atk:320,sk:'Apocalypse',tp:'b',ft:'GENÈSE FINALE',fd:'Réécrit la réalité !'}
+);
+let df={};B_DEF.forEach(x=>Reflect.set(df,x.id,1));
+let S=JSON.parse(localStorage.getItem('nkSave'))||{cr:300,cy:10,na:false,st:1,sel:'h1',b:df,ob:Array.of(),db:Array.of()};
+const u=new URLSearchParams(location.search).get('unlock');
+if(u){if(u==='nopub')S.na=true;if(u==='c150')S.cy+=150;if(u==='mega'){S.cr+=25000;S.cy+=80;}if(u.startsWith('b')&&!S.ob.includes(u)){S.ob.push(u);S.sel=u;}history.replaceState({},'',location.pathname);}
 function sv(){localStorage.setItem('nkSave',JSON.stringify(S));ren();}
 let rTab='h';function setTab(t){rTab=t;document.getElementById('t-h').classList.toggle('active',t==='h');document.getElementById('t-b').classList.toggle('active',t==='b');renR();}
 function go(v,el){document.querySelectorAll('.sec').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.nbtn').forEach(x=>x.classList.remove('active'));document.getElementById('v-'+v).classList.add('active');el.classList.add('active');if(v==='com')initC();}
 function ren(){
 document.getElementById('u-cr').innerText=S.cr;document.getElementById('u-cy').innerText=S.cy;document.getElementById('stg').innerText=S.st;
-document.getElementById('rate').innerText=((S.b.market||1)*60)+((S.b.bank||1)*100)-60;
+document.getElementById('rate').innerText=((Reflect.get(S.b,'market')||1)*60)+((Reflect.get(S.b,'bank')||1)*100)-60;
 if(S.na){document.getElementById('ban').style.display='none';document.getElementById('iad').style.display='none';document.getElementById('vip').style.display='inline-block';}
 const g=document.getElementById('b-grid');g.innerHTML='';
-B_DEF.forEach(x=>{const l=S.b[x.id]||1,c=l*x.c;g.innerHTML+=`<div class="card"><div><h3>${x.n} <span style="color:var(--cyan)">Nv.${l}</span></h3><p>${x.d}</p></div><button class="btn ${S.cr>=c?'c-cyan':'c-off'}" onclick="upB('${x.id}',${c})">Améliorer (${c} ⚡)</button></div>`;});
+B_DEF.forEach(x=>{const l=Reflect.get(S.b,x.id)||1,c=l*x.c;g.innerHTML+=`<div class="card"><div><h3>${x.n} <span style="color:var(--cyan)">Nv.${l}</span></h3><p>${x.d}</p></div><button class="btn ${S.cr>=c?'c-cyan':'c-off'}" onclick="upB('${x.id}',${c})">Améliorer (${c} ⚡)</button></div>`;});
 renR();
 }
-function upB(id,c){if(S.cr<c)return alert('Crédits insuffisants');S.cr-=c;S.b[id]=(S.b[id]||1)+1;sv();}
-function col(){const g=((S.b.market||1)*60)+((S.b.bank||1)*100)-60;S.cr+=g;alert('+'+g+' ⚡');sv();}
-function gst(id){let f=H_DAT.find(x=>x.id===id)||BO_DAT.find(x=>x.id===id)||H_DAT.at(0);const m=f.id.startsWith('b')?(1+((S.b.orbital||1)-1)*.2):1;return{...f,fhp:Math.round(f.hp*(1+((S.b.clinic||1)-1)*.15)*m),fatk:Math.round(f.atk*(1+((S.b.forge||1)-1)*.12)*m),crit:Math.min(75,20+((S.b.radar||1)-1)*2)};}
+function upB(id,c){if(S.cr<c)return alert('Crédits insuffisants');S.cr-=c;Reflect.set(S.b,id,(Reflect.get(S.b,id)||1)+1);sv();}
+function col(){const g=((Reflect.get(S.b,'market')||1)*60)+((Reflect.get(S.b,'bank')||1)*100)-60;S.cr+=g;alert('+'+g+' ⚡');sv();}
+function gst(id){let f=H_DAT.find(x=>x.id===id)||BO_DAT.find(x=>x.id===id)||H_DAT.at(0);const m=f.id.startsWith('b')?(1+((Reflect.get(S.b,'orbital')||1)-1)*.2):1;return{...f,fhp:Math.round(f.hp*(1+((Reflect.get(S.b,'clinic')||1)-1)*.15)*m),fatk:Math.round(f.atk*(1+((Reflect.get(S.b,'forge')||1)-1)*.12)*m),crit:Math.min(75,20+((Reflect.get(S.b,'radar')||1)-1)*2)};}
 function renR(){
 const l=document.getElementById('r-list');l.innerHTML='';
-if(rTab==='h'){H_DAT.forEach(h=>{const s=gst(h.id),ok=(S.b[h.b]||1)>=h.l,sl=S.sel===h.id,bo=B_DEF.find(x=>x.id===h.b),bn=bo?bo.n.substring(3):h.b;
+if(rTab==='h'){H_DAT.forEach(h=>{const s=gst(h.id),ok=(Reflect.get(S.b,h.b)||1)>=h.l,sl=S.sel===h.id,bo=B_DEF.find(x=>x.id===h.b),bn=bo?bo.n.substring(3):h.b;
 const ac=ok?`<button class="btn ${sl?'c-yel':'c-cyan'}" onclick="S.sel='${h.id}';sv()">${sl?'Équipé':'Choisir'}</button>`:`<small style="text-align:center">Requis:<br>${bn} Nv.${h.l}</small>`;
 l.innerHTML+=`<div class="rcard"><div class="ico">${h.ic}</div><div class="inf"><h4>${h.n}</h4><span>${h.sk}</span><small>PV:${s.fhp} | ATQ:${s.fatk}</small></div><div class="act">${ac}</div></div>`;});}
 else{BO_DAT.forEach(b=>{const s=gst(b.id),ow=S.ob.includes(b.id),df=S.db.includes(b.id),sl=S.sel===b.id;
@@ -134,7 +137,38 @@ let C={};
 function initC(){
 const f=gst(S.sel);C={f,php:f.fhp,pm:f.fhp,patk:f.fatk,cr:f.crit,cd:0,bo:BO_DAT.find(x=>x.st===S.st)||null};
 if(C.bo){document.getElementById('e-name').innerText=C.bo.n;document.getElementById('e-type').innerText='BOSS';C.em=C.bo.hp;C.eatk=C.bo.atk;}
-else{const n=['Droïde','Cyborg','Exosquelette','Assassin'];document.getElementById('e-name').innerText=n.at(S.st%4)+' Mk.'+S.st;document.getElementById('e-type').innerText=S.st%2===0?'MI-HUMAIN':'ROBOT';C.em=90+S.st*42;C.eatk=14+S.st*7;}
+else{const n=Array.of('Droïde','Cyborg','Exosquelette','Assassin');document.getElementById('e-name').innerText=n.at(S.st%4)+' Mk.'+S.st;document.getElementById('e-type').innerText=S.st%2===0?'MI-HUMAIN':'ROBOT';C.em=90+S.st*42;C.eatk=14+S.st*7;}
 C.ehp=C.em;document.getElementById('p-name').innerText=f.n;document.getElementById('p-cr').innerText=C.cr;document.getElementById('log').innerHTML='> Cible verrouillée.<br>';updC();
 }
 function updC(){
+document.getElementById('p-hp').innerText=Math.max(0,C.php)+'/'+C.pm;document.getElementById('p-atk').innerText=C.patk;document.getElementById('p-bar').style.width=Math.max(0,(C.php/C.pm)*100)+'%';
+document.getElementById('e-hp').innerText=Math.max(0,C.ehp)+'/'+C.em;document.getElementById('e-atk').innerText=C.eatk;document.getElementById('e-bar').style.width=Math.max(0,(C.ehp/C.em)*100)+'%';
+const sb=document.getElementById('b-skl');sb.disabled=C.cd>0;sb.innerText=C.cd>0?'Recharge ('+C.cd+')':'⚡ Pouvoir';
+document.getElementById('btn-fat').style.display=(C.ehp>0&&C.ehp<=C.em*.28)?'block':'none';
+}
+function lg(t,c='#cbd5e1'){const l=document.getElementById('log');l.innerHTML+=`<span style="color:${c}">${t}</span><br>`;l.scrollTop=l.scrollHeight;}
+function turn(a){
+if(C.php<=0||C.ehp<=0)return;let d=C.patk+Math.floor(Math.random()*10-5);if(Math.random()*100<C.cr)d=Math.round(d*1.6);
+if(a==='s'){C.cd=3;if(C.f.tp==='b'){d=Math.round(C.patk*2.3);lg('> '+C.f.sk+': '+d+' dég!','#00f3ff');}else if(C.f.tp==='h'){const h=Math.round(C.pm*.45);C.php=Math.min(C.pm,C.php+h);lg('> Soin +'+h+' & '+d+' dég!','#00ff88');}else{d=Math.round(C.patk*1.7);C.php+=Math.round(C.pm*.2);lg('> Bouclier & '+d+' dég!','#fcee0a');}}
+else{if(C.cd>0)C.cd--;lg('> Tir: '+d+' dégâts');}
+C.ehp-=d;updC();if(C.ehp<=0)return setTimeout(()=>endC(1,0),400);
+document.getElementById('b-atk').disabled=true;
+setTimeout(()=>{C.php-=C.eatk;lg('> Riposte: -'+C.eatk+' PV','#ff0055');updC();document.getElementById('b-atk').disabled=false;if(C.php<=0)setTimeout(()=>endC(0,0),400);},400);
+}
+function fatality(){
+document.getElementById('f-tit').innerText=C.f.ft;document.getElementById('f-dsc').innerText=C.f.fd;
+document.getElementById('fat-ov').style.display='flex';C.ehp=0;updC();setTimeout(()=>{document.getElementById('fat-ov').style.display='none';endC(1,1);},2400);
+}
+function endC(w,f){
+document.getElementById('m-bos').innerText='';
+if(w){const cg=Math.round((90+S.st*30)*(1+((Reflect.get(S.b,'reactor')||1)-1)*.1)*(f?1.3:1)),cyg=C.bo?20:(f?3:0);S.cr+=cg;S.cy+=cyg;
+document.getElementById('m-tit').innerText=f?'💀 FINISH HOLLYWOODIEN !':'VICTOIRE !';document.getElementById('m-rew').innerText='+'+cg+' ⚡'+(cyg?' | +'+cyg+' 💎':'');
+if(C.bo&&!S.db.includes(C.bo.id)){S.db.push(C.bo.id);document.getElementById('m-bos').innerText='🔥 BOSS DÉBLOQUÉ DANS ÉQUIPE !';}S.st++;}
+else{S.cr+=30;document.getElementById('m-tit').innerText='DÉFAITE';document.getElementById('m-rew').innerText='+30 ⚡ récupérés';}
+sv();document.getElementById('modal').style.display='flex';
+}
+function nextStg(){document.getElementById('modal').style.display='none';initC();}
+ren();
+</script>
+</body>
+</html>
