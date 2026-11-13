@@ -1,0 +1,162 @@
+﻿
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    <title>NEO-KOWLOON : Overdrive</title>
+    <style>
+        :root {
+            --bg-dark: #06080e;
+            --panel-bg: #101524;
+            --neon-cyan: #00f3ff;
+            --neon-pink: #ff0055;
+            --neon-yellow: #fcee0a;
+            --neon-purple: #9d00ff;
+            --neon-green: #00ff88;
+            --text-main: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg-dark); color: var(--text-main); display: flex; flex-direction: column; align-items: center; justify-content: space-between; height: 100dvh; overflow: hidden; }
+
+        /* Barre Supérieure */
+        #top-bar { width: 100%; max-width: 520px; background: #0b0f1a; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--neon-cyan); box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); z-index: 5; }
+        .currency-group { display: flex; gap: 6px; align-items: center; }
+        .curr-badge { background: #161d30; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; border: 1px solid #2a3655; }
+        .c-credits { color: var(--neon-yellow); }
+        .c-crystals { color: var(--neon-pink); }
+        .vip-tag { background: var(--neon-purple); color: white; padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: none; }
+
+        /* Zone Principale */
+        #main-viewport { width: 100%; max-width: 520px; flex-grow: 1; overflow-y: auto; padding: 12px; position: relative; }
+
+        /* Navigation Basse */
+        #nav-bar { width: 100%; max-width: 520px; display: flex; background: #0b0f1a; border-top: 1px solid #2a3655; }
+        .nav-btn { flex: 1; padding: 11px 4px; background: none; border: none; color: #64748b; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .nav-btn.active { color: var(--neon-cyan); background: rgba(0, 243, 255, 0.08); border-top: 2px solid var(--neon-cyan); }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
+        h2 { font-size: 16px; text-transform: uppercase; letter-spacing: 1px; color: var(--neon-cyan); margin-bottom: 10px; border-left: 3px solid var(--neon-pink); padding-left: 8px; }
+
+        /* VILLAGE (12 BÂTIMENTS) */
+        .village-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .building-card { background: var(--panel-bg); border: 1px solid #24304d; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; }
+        .building-card h3 { font-size: 13px; color: white; margin-bottom: 3px; }
+        .building-card p { font-size: 11px; color: #94a3b8; margin-bottom: 8px; line-height: 1.3; }
+        
+        .btn-cyber { width: 100%; padding: 8px 6px; border: none; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; transition: 0.15s; }
+        .btn-cyber:active { transform: scale(0.96); }
+        .btn-cyan { background: var(--neon-cyan); color: #050811; }
+        .btn-pink { background: var(--neon-pink); color: white; }
+        .btn-yellow { background: var(--neon-yellow); color: #050811; }
+        .btn-purple { background: var(--neon-purple); color: white; }
+        .btn-disabled { background: #1e293b; color: #64748b; cursor: not-allowed; }
+
+        /* SOUS-ONGLETS HÉROS / BOSS */
+        .sub-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+        .sub-btn { flex: 1; padding: 8px; background: #161d30; border: 1px solid #2a3655; color: #94a3b8; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .sub-btn.active { background: var(--neon-pink); color: white; border-color: var(--neon-pink); }
+
+        /* CARTES PERSONNAGES */
+        .char-card { background: var(--panel-bg); border: 1px solid #2a3655; border-radius: 8px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .char-card.boss-card { border-color: var(--neon-pink); background: linear-gradient(135deg, #101524 0%, #260a18 100%); }
+        .char-avatar { width: 44px; height: 44px; border-radius: 8px; background: #1a2236; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 1px solid var(--neon-cyan); flex-shrink: 0; }
+        .char-details { flex-grow: 1; padding: 0 10px; }
+        .char-details h4 { font-size: 13px; color: white; }
+        .char-details .skill-tag { font-size: 10px; color: var(--neon-cyan); display: block; margin: 2px 0; }
+        .char-details .stats-line { font-size: 11px; color: #94a3b8; }
+        .char-actions { display: flex; flex-direction: column; gap: 4px; min-width: 90px; }
+
+        /* ARÈNE DE COMBAT & FINISHERS */
+        .combat-arena { background: radial-gradient(circle at center, #162038 0%, #06080e 100%); border: 1px solid #2a3655; border-radius: 10px; padding: 12px; position: relative; }
+        .fighter-box { background: rgba(11, 15, 26, 0.9); border: 1px solid #334155; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+        .fighter-box.shake { animation: shake 0.35s; border-color: var(--neon-pink); }
+        @keyframes shake { 0%, 100% { transform: translate(0, 0); } 20% { transform: translate(-8px, 4px); } 40% { transform: translate(8px, -4px); } 60% { transform: translate(-6px, -2px); } 80% { transform: translate(6px, 2px); } }
+        
+        .hp-bar-bg { width: 100%; height: 10px; background: #1e293b; border-radius: 5px; overflow: hidden; margin-top: 6px; }
+        .hp-bar-fill { height: 100%; background: var(--neon-cyan); transition: width 0.25s; }
+        .hp-bar-fill.enemy { background: var(--neon-pink); }
+        
+        #combat-log { background: #04060a; border: 1px solid #1e293b; border-radius: 6px; height: 95px; overflow-y: auto; padding: 8px; font-size: 11px; font-family: monospace; color: #cbd5e1; margin-bottom: 10px; }
+        .combat-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+        /* BOUTON FATALITY HOLLYWOODIEN */
+        #btn-fatality {
+            grid-column: span 2;
+            background: linear-gradient(90deg, #ff0055, #ff5500, #ff0055);
+            background-size: 200% auto;
+            color: white;
+            font-size: 14px;
+            padding: 12px;
+            border: 2px solid #fcee0a;
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.8);
+            animation: pulseFatal 0.8s infinite alternate;
+            display: none;
+        }
+        @keyframes pulseFatal { from { transform: scale(1); filter: brightness(1); } to { transform: scale(1.03); filter: brightness(1.3); } }
+
+        /* ÉCRAN CINÉMATIQUE DE COUP FATAL (HOLLYWOOD FINISH) */
+        #fatality-overlay {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 50;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+        .cine-bars { position: absolute; left: 0; width: 100%; height: 12%; background: #000; z-index: 52; border-bottom: 2px solid var(--neon-pink); }
+        .cine-top { top: 0; }
+        .cine-bot { bottom: 0; border-bottom: none; border-top: 2px solid var(--neon-pink); }
+        .slash-line {
+            position: absolute;
+            width: 150%;
+            height: 6px;
+            background: white;
+            box-shadow: 0 0 30px var(--neon-cyan), 0 0 60px var(--neon-pink);
+            transform: rotate(-25deg) scaleX(0);
+            animation: slashAnim 0.4s forwards ease-out;
+        }
+        @keyframes slashAnim { to { transform: rotate(-25deg) scaleX(1); } }
+        .fatal-title {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: var(--neon-yellow);
+            text-shadow: 0 0 20px var(--neon-pink), 3px 3px 0px var(--neon-pink);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            animation: zoomText 0.5s ease-out;
+        }
+        @keyframes zoomText { from { transform: scale(2.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .fatal-desc { font-size: 15px; color: var(--neon-cyan); max-width: 380px; font-weight: bold; line-height: 1.4; }
+
+        /* MODALE FIN DE COMBAT + PUB */
+        #combat-modal { position: fixed; inset: 0; background: rgba(5, 8, 17, 0.96); display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 20; text-align: center; }
+        .ad-box { width: 300px; height: 250px; background: #161d30; border: 1px dashed #64748b; display: flex; align-items: center; justify-content: center; margin: 12px 0; font-size: 12px; color: #94a3b8; }
+
+        /* BANNIÈRE PUB FIXE */
+        #banner-ad { width: 100%; max-width: 520px; height: 50px; background: #04060b; border-top: 1px solid #1e293b; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #475569; }
+    </style>
+</head>
+<body>
+
+    <div id="top-bar">
+        <div style="font-weight:900; letter-spacing:1px; color:var(--neon-cyan); font-size:13px;">NEO-KOWLOON</div>
+        <div class="currency-group">
+            <div class="curr-badge c-credits">⚡ <span id="ui-credits">300</span></div>
+            <div class="curr-badge c-crystals">💎 <span id="ui-crystals">10</span></div>
+            <div id="vip-badge" class="vip-tag">SANS PUB</div>
+        </div>
+    </div>
+
+    <div id="main-viewport">
+        
